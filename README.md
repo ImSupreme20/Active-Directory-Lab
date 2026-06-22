@@ -10,6 +10,9 @@ A self-built Active Directory environment deployed entirely on local virtualizat
 
 ---
 
+## Watch the demo here 
+
+
 ## 1. The Problem This Lab Solves
 
 Every organization running Windows infrastructure depends on Active Directory to answer one question: **who is allowed to do what?**
@@ -29,54 +32,7 @@ AD is the identity backbone for an enterprise. It governs which users can log in
 
 The diagram below shows the environment as built: a Windows Server VM promoted to a Domain Controller on a local hypervisor, with the resulting forest, organizational structure, security groups, and Group Policy enforcement validated against a domain-joined client.
 
-```mermaid
-graph TB
-    subgraph Host["Physical Host — VMware Workstation Pro"]
-        subgraph LAN["Isolated LAN Segment: AD-Lab"]
-            DC["Windows Server 2025 VM<br/>Domain Controller — AD DS + DNS"]
-            CLIENT["Windows 11 Enterprise VM<br/>(90-day eval) — domain-joined client"]
-        end
-    end
-
-    subgraph Forest["Active Directory Forest: lab.local"]
-        subgraph OUs["Organizational Units"]
-            OU_IT["IT"]
-            OU_FIN["Finance"]
-            OU_HR["HR"]
-            OU_SALES["Sales"]
-            OU_COMP["Computers"]
-        end
-
-        subgraph Groups["Security Groups (Global, RBAC)"]
-            G_IT["IT_Admins"]
-            G_FIN["Finance_Users"]
-            G_HR["HR_Users"]
-            G_SALES["Sales_Users"]
-        end
-
-        subgraph Users["User Accounts"]
-            U1["alice.chen"]
-            U2["bob.patel"]
-            U3["carol.jones"]
-            U4["david.smith"]
-        end
-
-        GPO["GPO: IT Security Policy<br/>12-char min password · complexity required<br/>15-min inactivity lock · USB storage denied"]
-    end
-
-    DC -->|"dcpromo (Install-ADDSForest)"| Forest
-    DC --> OU_IT & OU_FIN & OU_HR & OU_SALES & OU_COMP
-
-    OU_IT --> G_IT --> U1
-    OU_FIN --> G_FIN --> U2
-    OU_HR --> G_HR --> U3
-    OU_SALES --> G_SALES --> U4
-
-    CLIENT -->|"DNS pointed at DC<br/>joined to lab.local"| DC
-    CLIENT -->|"computer object moved into IT OU<br/>login as alice.chen"| OU_IT
-    GPO -.->|linked to| OU_IT
-    GPO -.->|enforced on login| CLIENT
-```
+![Active Directory Lab — VMware Architecture](architecture-diagram.svg)
 
 **Trust boundary:** the Domain Controller is the single authoritative source for authentication and DNS inside `lab.local`. The client VM only trusts the domain because its DNS was explicitly pointed at the DC and its computer object was moved into the `IT` OU — without both of those, the GPO would never have reached it. Every OU, group, user, and policy in the diagram exists because the DC trusts and enforces it; nothing authenticates independently of it.
 
@@ -141,26 +97,26 @@ New-ADGroup -Name "Sales_Users"   -GroupScope Global -GroupCategory Security -Pa
 ```powershell
 $password = ConvertTo-SecureString "Welcome@2026!" -AsPlainText -Force
 
-New-ADUser -Name "alice.chen" -GivenName "Alice" -Surname "Chen" `
-  -SamAccountName "alice.chen" -UserPrincipalName "alice.chen@lab.local" `
+New-ADUser -Name "marcus.reyes" -GivenName "Marcus" -Surname "Reyes" `
+  -SamAccountName "marcus.reyes" -UserPrincipalName "marcus.reyes@lab.local" `
   -Path "OU=IT,DC=lab,DC=local" -AccountPassword $password -Enabled $true
 
-New-ADUser -Name "bob.patel" -GivenName "Bob" -Surname "Patel" `
-  -SamAccountName "bob.patel" -UserPrincipalName "bob.patel@lab.local" `
+New-ADUser -Name "priya.anand" -GivenName "Priya" -Surname "Anand" `
+  -SamAccountName "priya.anand" -UserPrincipalName "priya.anand@lab.local" `
   -Path "OU=Finance,DC=lab,DC=local" -AccountPassword $password -Enabled $true
 
-New-ADUser -Name "carol.jones" -GivenName "Carol" -Surname "Jones" `
-  -SamAccountName "carol.jones" -UserPrincipalName "carol.jones@lab.local" `
+New-ADUser -Name "jordan.lee" -GivenName "Jordan" -Surname "Lee" `
+  -SamAccountName "jordan.lee" -UserPrincipalName "jordan.lee@lab.local" `
   -Path "OU=HR,DC=lab,DC=local" -AccountPassword $password -Enabled $true
 
-New-ADUser -Name "david.smith" -GivenName "David" -Surname "Smith" `
-  -SamAccountName "david.smith" -UserPrincipalName "david.smith@lab.local" `
+New-ADUser -Name "natalie.osei" -GivenName "Natalie" -Surname "Osei" `
+  -SamAccountName "natalie.osei" -UserPrincipalName "natalie.osei@lab.local" `
   -Path "OU=Sales,DC=lab,DC=local" -AccountPassword $password -Enabled $true
 
-Add-ADGroupMember -Identity "IT_Admins"     -Members "alice.chen"
-Add-ADGroupMember -Identity "Finance_Users" -Members "bob.patel"
-Add-ADGroupMember -Identity "HR_Users"      -Members "carol.jones"
-Add-ADGroupMember -Identity "Sales_Users"   -Members "david.smith"
+Add-ADGroupMember -Identity "IT_Admins"     -Members "marcus.reyes"
+Add-ADGroupMember -Identity "Finance_Users" -Members "priya.anand"
+Add-ADGroupMember -Identity "HR_Users"      -Members "jordan.lee"
+Add-ADGroupMember -Identity "Sales_Users"   -Members "natalie.osei"
 ```
 
 ### 4.7 Configure and link Group Policy
@@ -182,7 +138,7 @@ A Domain Controller can't validate its own policies — they only mean something
 2. **DNS pointer** — on the client, set the Preferred DNS server to the DC's IPv4 address (kept the IP address itself on automatic/DHCP) so `lab.local` would actually resolve.
 3. **Domain join** — `sysdm.cpl` → Change → Domain → `lab.local`, authenticated as `LAB\Administrator`, restarted on prompt.
 4. **Targeted the computer object** — in ADUC, moved the new computer object out of the default `Computers` container and into the `IT` OU, since policies only apply to objects inside the OU they're linked to.
-5. **Logged in as `alice.chen@lab.local`** on the client and ran:
+5. **Logged in as `marcus.reyes@lab.local`** on the client and ran:
 ```powershell
 gpupdate /force
 gpresult /r
@@ -198,7 +154,7 @@ gpresult /r
 | Domain controller is running | `Get-ADDomainController` | Returns DC info for forest `lab.local` |
 | OUs exist | `Get-ADOrganizationalUnit -Filter *` | Lists all 5 OUs |
 | Users exist and are enabled | `Get-ADUser -Filter {Enabled -eq $true}` | Lists all 4 accounts |
-| Group membership correct | `Get-ADGroupMember -Identity IT_Admins` | Returns `alice.chen` |
+| Group membership correct | `Get-ADGroupMember -Identity IT_Admins` | Returns `marcus.reyes` |
 | GPO is linked | `Get-GPInheritance -Target 'OU=IT,DC=lab,DC=local'` | Shows `IT Security Policy` as linked |
 
 ---
@@ -251,3 +207,4 @@ The recurring lesson across all of this: the actual Active Directory commands wo
 **Ifeanyichukwu R. (Raymond) Ezirike**
 B.S. Information Technology, Network Security — Towson University
 [LinkedIn](#) · [GitHub](#)
+
