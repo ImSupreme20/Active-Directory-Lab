@@ -206,5 +206,5 @@ The recurring lesson across all of this: the actual Active Directory commands wo
 
 **Ifeanyichukwu R. (Raymond) Ezirike**
 B.S. Information Technology, Network Security — Towson University
-[LinkedIn](#) · [GitHub](#)
+[LinkedIn](https://www.linkedin.com/in/ifeanyichukwu-ezirike-3a176b2b8/) · [GitHub](https://github.com/ImSupreme20)
 
