@@ -126,7 +126,7 @@ Created **IT Security Policy**, linked to the `IT` OU, enforcing:
 |---|---|---|
 | Minimum password length | 12 | Enforce strong credentials across IT accounts |
 | Password complexity | Enabled | Requires upper, lower, number, and symbol |
-| Machine inactivity limit | 900 seconds | Auto-lock after 15 minutes idle |
+| Machine inactivity limit | 450 seconds | Auto-lock after 7 minutes and 30 seconds idle |
 | Removable storage access | Deny all | Mitigate data exfiltration via USB |
 
 Validated by joining a Windows 11 client VM to `lab.local` — full process in 4.8 below.
