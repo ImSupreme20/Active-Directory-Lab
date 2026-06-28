@@ -12,6 +12,7 @@ A self-built Active Directory environment deployed entirely on local virtualizat
 
 ## Watch the demo here 
 
+[![Watch the Lab Walkthrough](https://img.youtube.com/vi/m4LVB45UnU0/0.jpg)](https://youtu.be/m4LVB45UnU0)
 
 ## 1. The Problem This Lab Solves
 
